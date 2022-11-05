@@ -6,7 +6,7 @@ import random
 import sys
 
 
-def inserting_info_hot_day(hot_date_weekday: int, happy_users: list, user: dict):
+def inserting_info_hot_day(hot_date_weekday: int, happy_users: list, user: dict, user_29feb: str):
     """
     Simple function to fill list of happy users of the next week.
 
@@ -23,20 +23,26 @@ def inserting_info_hot_day(hot_date_weekday: int, happy_users: list, user: dict)
     if hot_date_weekday == 5:
         hot_date_weekday = 0
         # to congratulate on Monday, but we need to know when it was
-        add_service_info = "(Saturday), "
+        add_service_info = f'(Saturday){user_29feb}, '
+
     elif hot_date_weekday == 6:
         hot_date_weekday = 0
         # to congratulate on Monday, but we need to know when it was
-        add_service_info = "(Saturday), "
+        add_service_info = f'(Sanday){user_29feb}, '
+
     else:
-        add_service_info = ", "
+        add_service_info = f'{user_29feb}, '
+
     try:
         happy_user = happy_users.pop(hot_date_weekday)
+
     except IndexError:
-        print("Disaster, there is no item to extract!")
+        print('Disaster, there is no item to extract!')
         return happy_users
+
     happy_users.insert(hot_date_weekday, happy_user +
-                       user.get("name", 'NONAME') + add_service_info)
+                       user.get('name', 'NONAME') + add_service_info)
+
     return happy_users
 
 
@@ -59,26 +65,36 @@ def get_birthdays_per_week(users: list, on_date=datetime.now().date()):
     happy_users = ['Monday: ', 'Tuesday: ',
                    'Wednesday: ', 'Thursday: ', 'Friday: ']
     current_datetime = on_date
-    # from next(current) Saturday:
+    # from next(current or yesterday) Saturday:
     start_date = current_datetime + \
         timedelta(days=int(5-current_datetime.weekday()))
-    # to next Friday (including both):
+    # to next Friday (including both, next Saturday not include):
     finish_date = start_date + timedelta(days=6)
     # for all users:
     for user in users:
-        hot_date = user.get("birthday")
+
+        hot_date = user.get('birthday')
         # if the week is the last of the year:
         delta_next_year = 1 if hot_date.month == (
             finish_date.year-start_date.year) else 0
-        hot_date = datetime(year=current_datetime.year +
-                            delta_next_year, month=hot_date.month, day=hot_date.day)
+
+        try:
+            hot_date = datetime(year=current_datetime.year +
+                            delta_next_year, month=hot_date.month, day=hot_date.day) 
+            unhappy_user = ''
+
+        except ValueError: # 29.02.YY
+            hot_date = datetime(year=current_datetime.year +
+                            delta_next_year, month=hot_date.month, day=hot_date.day-1) + timedelta(days=1)
+            unhappy_user = '(indeed February 29)'
+
         if start_date <= hot_date.date() <= finish_date:
             # if hot_date.weekday() == 5 or hot_date.weekday() == 6:
             happy_users = inserting_info_hot_day(
-                hot_date.weekday(), happy_users, user)
+                hot_date.weekday(), happy_users, user, unhappy_user)
 
     for happy_user in happy_users:
-        if happy_user[-2] != ":":
+        if happy_user[-2] != ':':
             happy_user = happy_user[:-2]
             print(happy_user)
 
@@ -86,6 +102,8 @@ def get_birthdays_per_week(users: list, on_date=datetime.now().date()):
 def check_user_data(users: list):
     """
     For check users data from file.
+    If 'users' not a list, or one or more of all elements of this list is not a dictionary,
+     then returnempty list, else - original list ('users').
 
         Parameters: 
             users(list): Must be a list of dictionaries with keys: "name" 
@@ -97,8 +115,8 @@ def check_user_data(users: list):
     if isinstance(users, list) and users:
         for element in users:
             if isinstance(element, dict) and \
-                isinstance(element.get("name", None), str) \
-                    and isinstance(element.get("birthday", None), datetime):
+                isinstance(element.get('name', None), str) \
+                    and isinstance(element.get('birthday', None), datetime):
                 continue
             else:
                 return []
@@ -109,7 +127,7 @@ def check_user_data(users: list):
 
 def load_users_list():
     """
-    For load users list from file... "users.data". # (to enter a parameter?).
+    For load users list from file... "users.data" (by default). # (to enter a parameter?).
 
         Parameters: 
             None.
@@ -118,9 +136,9 @@ def load_users_list():
             users (list): List from file... list of dictionaries with 
                 keys: "name" and "birthday".
     """
-    if os.path.isfile(os.path.join(os.path.abspath(os.path.dirname(__file__)), "users.data")):
+    if os.path.isfile(os.path.join(os.path.abspath(os.path.dirname(__file__)), 'users.data')):
         users = []
-        with open(os.path.join(os.path.abspath(os.path.dirname(__file__)), "users.data"), 'rb') as fh:
+        with open(os.path.join(os.path.abspath(os.path.dirname(__file__)), 'users.data'), 'rb') as fh:
             try:
                 users = pickle.load(fh)
             except pickle.UnpicklingError:
@@ -141,7 +159,7 @@ def load_users_list():
 
 def save_users_list(users: list):
     """
-    For save users list in file... "users.data". # (to enter a parameter?).
+    For save users list in file... "users.data" (by default). # (to enter a parameter?).
 
         Parameters: 
             users (list): List of dictionaries with 
@@ -151,7 +169,7 @@ def save_users_list(users: list):
             None.
     """
     if users and isinstance(users, list):
-        with open(os.path.join(os.path.abspath(os.path.dirname(__file__)), "users.data"), 'wb') as fh:
+        with open(os.path.join(os.path.abspath(os.path.dirname(__file__)), 'users.data'), 'wb') as fh:
             try:
                 pickle.dump(users, fh)
             except pickle.UnpicklingError:
@@ -162,14 +180,14 @@ def save_users_list(users: list):
                 print(f'Something went wrong while trying to write the file, you can try again. {repr(e)}')
                 # raise pickle.UnpicklingError(repr(e))
     else:
-        print("No data to save!")
+        print('No data to save!')
 
 
 def validate_date(birthday_data: str):
     """A simple function to validate the date entered by the user.
 
         Parameters: 
-            birthday_data(str): String line in format: YYYY-MM-DD.
+            birthday_data(str): String line in known format: YYYY-MM-DD.
 
         Returns: 
             False: if data must be re-entered, 
@@ -179,10 +197,6 @@ def validate_date(birthday_data: str):
     try:
         birthday_data = datetime(
             year=int(birthday_data[0]), month=int(birthday_data[1]), day=int(birthday_data[2]))
-        if birthday_data > datetime.now().date():
-            print("No man from the future!")
-
-            return False
 
     except ValueError:
         return False
@@ -209,6 +223,9 @@ def manual_data_entry(users: list):
         user_name = input('Name of person: ')  # username
         birthday_data = input('Enter Birthday (YYYY-MM-DD): ')
         birthday_data = validate_date(birthday_data)
+        if birthday_data > datetime.now().date():
+            print('No man from the future!')
+            birthday_data = False
         if not birthday_data:
             continue
         users.append({'name': user_name, 'birthday': birthday_data})
@@ -268,9 +285,9 @@ def random_date(start_month=1, end_month=12, start_day=1, end_day=31, max_year=d
         Returns: 
             datetime object with random date.
     """
-    if max_year < 1922:
+    if max_year < datetime.now().year -130:
         max_year = datetime.now().year - 1
-    year = random.randint(1922, max_year)   # 2022, 2072
+    year = random.randint(datetime.now().year - 130, max_year)   # 2022, 2072
     month = random.randint(start_month, end_month)  # 1, 12
     day = random.randint(start_day, end_day)  # 1, 31  # 30/29/28
     while True:
@@ -284,8 +301,9 @@ def random_date(start_month=1, end_month=12, start_day=1, end_day=31, max_year=d
 
 
 def generator_virtual_persons(persons_limit: int):
-    """
-    For create a test list of users from 144 to 288 (only for test).
+    """ (only for test).
+    For create a test list of users in certain quantity: persons_limit.
+    Each week of year will be birthday's if persons_limit >= 144.
 
         Returns: 
             users (list): Created list of dictionaries with keys: "name" 
@@ -321,38 +339,44 @@ def main():
     The function displays users with birthdays one week ahead 
     of the current day.
     1 - automatically form a list of users with random date and 
-        numbered names - for example and for testing
-    0 - manually create a list of users (or load from file - next try)
+        numbered names - for example and for testing only.
+    0 - manually create a list of users (or load from file - next try).
     """
     users = load_users_list()
 
     if len(sys.argv) < 2:
-        print('No startup parameter entered, must be 1 or 0')
-        print('1 - automatically form a list of users\n    with random date and numbered names')
-        print('0 - manually create a list of users')
-        input("Incorrect input start parameters! \n Press Enter for EXIT...")
-        # # time to test:
-        # users = load_users_list()  # time to test:
-        show_users(users)
-        get_birthdays_per_week(users)
+        print('No startup parameter entered, must be 1 or 0.')
+        print('1 - automatically form a list of users\n    with random date and numbered names.')
+        print('0 - manually create a list of users.')
+        input('Incorrect input start parameters! \n Press Enter for EXIT...')
+        # # # time to test:
+        # # users = load_users_list()  # time to test:
+        # show_users(users)
+        # get_birthdays_per_week(users)
 
         exit()
-    if sys.argv[1] == "1":
+
+    if sys.argv[1] == '1':
         users = generator_virtual_persons(persons_limit=180)
-        save_users_list(users)
-    elif sys.argv[1] == "0":
+
+    elif sys.argv[1] == '0':
         users = create_users_data(users)
-        save_users_list(users)
+ 
     else:
-        input("Incorrect input start parameters! ")
+        input('Incorrect input start parameters! ')
+
+    if not users:
         exit()
+
+    else:
+        save_users_list(users)
 
     while True:
         specific_date = input(
-            "Press enter for the current date, or enter a specific'\
-                ' date (YYYY-MM-DD): ")
+            'Press "enter" for the current date, or enter here a specific'\
+                ' date (in format YYYY-MM-DD): ')
         if len(specific_date) == 0:
-            get_birthdays_per_week(users)  # on_date=datetime.now().date()
+            get_birthdays_per_week(users) 
             break
         else:
             specific_date = validate_date(specific_date)
@@ -362,5 +386,5 @@ def main():
             break
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()
