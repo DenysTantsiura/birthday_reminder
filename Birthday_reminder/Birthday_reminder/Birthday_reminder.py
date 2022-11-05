@@ -15,6 +15,7 @@ def inserting_info_hot_day(hot_date_weekday: int, happy_users: list, user: dict,
             happy_users (list): List of users with upcoming birthdays. 
             user (dict): List of dictionaries with keys: "name"
                 and "birthday".
+            user_29feb (str): Comment if birthday in 29 February.
 
         Returns: 
             happy_users (list): List of users with upcoming 
@@ -28,7 +29,7 @@ def inserting_info_hot_day(hot_date_weekday: int, happy_users: list, user: dict,
     elif hot_date_weekday == 6:
         hot_date_weekday = 0
         # to congratulate on Monday, but we need to know when it was
-        add_service_info = f'(Sanday){user_29feb}, '
+        add_service_info = f'(Sunday){user_29feb}, '
 
     else:
         add_service_info = f'{user_29feb}, '
@@ -79,17 +80,16 @@ def get_birthdays_per_week(users: list, on_date=datetime.now().date()):
             finish_date.year-start_date.year) else 0
 
         try:
-            hot_date = datetime(year=current_datetime.year +
-                            delta_next_year, month=hot_date.month, day=hot_date.day) 
+            hot_date = datetime(year=current_datetime.year + delta_next_year, month=hot_date.month, day=hot_date.day)
             unhappy_user = ''
 
-        except ValueError: # 29.02.YY
-            hot_date = datetime(year=current_datetime.year +
-                            delta_next_year, month=hot_date.month, day=hot_date.day-1) + timedelta(days=1)
+        except ValueError:  # 29.02.YY
+            hot_date = datetime(year=current_datetime.year + delta_next_year, month=hot_date.month, day=hot_date.day-1)\
+                       + timedelta(days=1)
             unhappy_user = '(indeed February 29)'
 
         if start_date <= hot_date.date() <= finish_date:
-            # if hot_date.weekday() == 5 or hot_date.weekday() == 6:
+
             happy_users = inserting_info_hot_day(
                 hot_date.weekday(), happy_users, user, unhappy_user)
 
@@ -103,7 +103,7 @@ def check_user_data(users: list):
     """
     For check users data from file.
     If 'users' not a list, or one or more of all elements of this list is not a dictionary,
-     then returnempty list, else - original list ('users').
+     then return empty list, else - original list ('users').
 
         Parameters: 
             users(list): Must be a list of dictionaries with keys: "name" 
@@ -285,7 +285,7 @@ def random_date(start_month=1, end_month=12, start_day=1, end_day=31, max_year=d
         Returns: 
             datetime object with random date.
     """
-    if max_year < datetime.now().year -130:
+    if max_year < datetime.now().year - 130:
         max_year = datetime.now().year - 1
     year = random.randint(datetime.now().year - 130, max_year)   # 2022, 2072
     month = random.randint(start_month, end_month)  # 1, 12
@@ -351,7 +351,7 @@ def main():
         input('Incorrect input start parameters! \n Press Enter for EXIT...')
         # # # time to test:
         # # users = load_users_list()  # time to test:
-        # show_users(users)
+        show_users(users)
         # get_birthdays_per_week(users)
 
         exit()
@@ -373,8 +373,7 @@ def main():
 
     while True:
         specific_date = input(
-            'Press "enter" for the current date, or enter here a specific'\
-                ' date (in format YYYY-MM-DD): ')
+            'Press "enter" for the current date, or enter here a specific date (in format YYYY-MM-DD): ')
         if len(specific_date) == 0:
             get_birthdays_per_week(users) 
             break
