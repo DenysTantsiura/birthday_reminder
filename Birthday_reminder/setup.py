@@ -1,7 +1,7 @@
 from importlib.metadata import entry_points
 from setuptools import setup, find_namespace_packages
 
-setup(name='Birthday_reminder',
+setup(name='birthday_reminder',
       version='1.0.1',
       description='Basic function to display user birthdays per week',
       url='https://github.com/DenysTantsiura/Denys-hw-8.git',
@@ -9,7 +9,7 @@ setup(name='Birthday_reminder',
       author_email='tdv@tesis.kiev.ua',
       license='MIT',
       packages=find_namespace_packages(),
-      entry_points={'console_scripts': ['bday = Birthday_reminder.Birthday_reminder:main']})
+      entry_points={'console_scripts': ['bday = birthday_reminder.birthday_reminder:main']})
 
 """
 The package is installed in the system by the command:
